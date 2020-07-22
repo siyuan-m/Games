@@ -1,7 +1,7 @@
 import pygame,random,sys
+import tetris_ai
 
 # 0:T, 1:S, 2:Z, 3:J, 4:L, 5:I, 6:O
-# Re-drawn version of https://gist.github.com/silvasur/565419 with better Tetris rule compliance
 
 tetriminos_shape = [
     [[1,1,1],
@@ -43,6 +43,7 @@ class Tetris:
         self.w_height = self.g_height
         self.fgColor = pygame.Color(255,253,252)
         self.bgColor = pygame.Color(37,37,37)
+        self.tiny_font = pygame.font.Font('ArcadeClassic.TTF',20)
         self.small_font = pygame.font.Font('ArcadeClassic.TTF',40)
         self.big_font = pygame.font.Font('ArcadeClassic.TTF',80)
 
@@ -56,9 +57,13 @@ class Tetris:
         self.board = [[0 for _ in range(10)] for _ in range(20)]
         self.n_piece = tetriminos_shape[random.choice(self.bag)]
         self.bag.remove(tetriminos_shape.index(self.n_piece))
+        self.c_piece = None
+        self.c_piece_x = None
+        self.c_piece_y = None
         self.new_piece()
         self.pause = False
         self.in_game = True
+        self.ai = False
         self.level = 0
         self.score = 0
         self.line = 0
@@ -85,7 +90,7 @@ class Tetris:
         for x in range(1,10):
             for y in range(1,20):
                 pygame.draw.circle(self.window,self.fgColor,(x*self.block_size,y*self.block_size),2)
-        # Draw side label: Next piece, level, score, and line
+        # Draw side label: Next piece, level, score, line, and control descriptions
         next_text = self.small_font.render("Next",1,self.fgColor)
         self.window.blit(next_text,(int(self.g_width+(self.w_width-self.g_width)/2-next_text.get_width()/2),0))
         pygame.draw.lines(self.window,self.fgColor,True,[(int(self.g_width+(self.w_width-self.g_width)/2-2*self.block_size),next_text.get_height()),
@@ -103,6 +108,40 @@ class Tetris:
         self.window.blit(score,(int(self.g_width+(self.w_width-self.g_width)/2-score.get_width()/2),5*next_text.get_height()+2*self.block_size))
         line = self.small_font.render("Line",1,self.fgColor)
         self.window.blit(line,(int(self.g_width+(self.w_width-self.g_width)/2-line.get_width()/2),8*next_text.get_height()+2*self.block_size))
+        up = self.tiny_font.render("Up",1,self.fgColor)
+        self.window.blit(up,(int(self.g_width+(self.w_width-self.g_width)/4-up.get_width()/2),11*next_text.get_height()+2*self.block_size))
+        rotate = self.tiny_font.render("Rotate",1,self.fgColor)
+        self.window.blit(rotate,(int(self.g_width+(self.w_width-self.g_width)*3/4-rotate.get_width()/2),11*next_text.get_height()+2*self.block_size))
+        down = self.tiny_font.render("Down",1,self.fgColor)
+        self.window.blit(down,(int(self.g_width+(self.w_width-self.g_width)/4-down.get_width()/2),12*next_text.get_height()+2*self.block_size))
+        soft_drop = self.tiny_font.render("Soft Drop",1,self.fgColor)
+        self.window.blit(soft_drop,(int(self.g_width+(self.w_width-self.g_width)*3/4-soft_drop.get_width()/2),12*next_text.get_height(
+        )+2*self.block_size))
+        space = self.tiny_font.render("Space",1,self.fgColor)
+        self.window.blit(space,(int(self.g_width+(self.w_width-self.g_width)/4-space.get_width()/2),13*next_text.get_height()+2*self.block_size))
+        hard_drop = self.tiny_font.render("Hard Drop",1,self.fgColor)
+        self.window.blit(hard_drop,(int(self.g_width+(self.w_width-self.g_width)*3/4-hard_drop.get_width()/2),13*next_text.get_height(
+        )+2*self.block_size))
+        p = self.tiny_font.render("P",1,self.fgColor)
+        self.window.blit(p,(int(self.g_width+(self.w_width-self.g_width)/4-p.get_width()/2),14*next_text.get_height()+2*self.block_size))
+        pause = self.tiny_font.render("Pause",1,self.fgColor)
+        self.window.blit(pause,(int(self.g_width+(self.w_width-self.g_width)*3/4-pause.get_width()/2),14*next_text.get_height()+2*self.block_size))
+        escape = self.tiny_font.render("Escape",1,self.fgColor)
+        self.window.blit(escape,(int(self.g_width+(self.w_width-self.g_width)/4-escape.get_width()/2),15*next_text.get_height()+2*self.block_size))
+        exit_game = self.tiny_font.render("Exit Game",1,self.fgColor)
+        self.window.blit(exit_game,(int(self.g_width+(self.w_width-self.g_width)*3/4-exit_game.get_width()/2),15*next_text.get_height(
+        )+2*self.block_size))
+        a = self.tiny_font.render("A",1,self.fgColor)
+        self.window.blit(a,(int(self.g_width+(self.w_width-self.g_width)/4-a.get_width()/2),16*next_text.get_height()+2*self.block_size))
+        toggle_ai = self.tiny_font.render("AI",1,self.fgColor)
+        self.window.blit(toggle_ai,(int(self.g_width+(self.w_width-self.g_width)*3/4-toggle_ai.get_width()/2),16*next_text.get_height(
+        )+2*self.block_size))
+
+        if self.ai:
+            ai = self.small_font.render("AI On",1,self.fgColor)
+        else:
+            ai = self.small_font.render("AI Off",1,self.fgColor)
+        self.window.blit(ai,(int(self.g_width+(self.w_width-self.g_width)/2-ai.get_width()/2),int(self.w_height-ai.get_height())))
 
     def draw_number(self):
         le_number = self.big_font.render(str(self.level),1,self.fgColor)
@@ -211,6 +250,9 @@ class Tetris:
     def toggle_pause(self):
         self.pause = not self.pause
 
+    def toggle_ai(self):
+        self.ai = not self.ai
+
     def new_game(self):
         if not self.in_game:
             # Initial game state
@@ -221,6 +263,7 @@ class Tetris:
             self.new_piece()
             self.pause = False
             self.in_game = True
+            self.ai = False
             self.level = 0
             self.score = 0
             self.line = 0
@@ -235,7 +278,8 @@ class Tetris:
             'UP':self.rotate_piece,
             'SPACE':self.hard_drop,
             'p':self.toggle_pause,
-            'RETURN':self.new_game
+            'RETURN':self.new_game,
+            'a':self.toggle_ai
         }
 
         clock = pygame.time.Clock()
@@ -256,16 +300,30 @@ class Tetris:
                     self.draw_foreground()
 
             pygame.display.update()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
-                elif event.type == pygame.USEREVENT+1:
-                    self.drop(soft_drop=False)
-                elif event.type == pygame.KEYDOWN:
-                    for key in key_actions:
-                        if event.key == eval('pygame.K_'+key):
-                            key_actions[key]()
+
+            if not self.ai:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+                    elif event.type == pygame.USEREVENT+1:
+                        self.drop(soft_drop=False)
+                    elif event.type == pygame.KEYDOWN:
+                        for key in key_actions:
+                            if event.key == eval('pygame.K_'+key):
+                                key_actions[key]()
+            if self.ai:
+                for event in list(pygame.event.get())+tetris_ai.run():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+                    elif event.type == pygame.USEREVENT+1:
+                        self.drop(soft_drop=False)
+                    elif event.type == pygame.KEYDOWN:
+                        for key in key_actions:
+                            if event.key == eval('pygame.K_'+key):
+                                key_actions[key]()
+
             clock.tick(FPS)
 
 if __name__ == "__main__":
