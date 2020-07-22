@@ -18,8 +18,8 @@ fgColor = pygame.Color(255, 255, 255)  # White
 bgColor = pygame.Color(53, 53, 53)  # Dark Grey
 
 # Draw the background
-pygame.freetype.init()
-font = pygame.freetype.SysFont(pygame.font.get_default_font(), 30, False)
+pygame.font.init()
+font = pygame.font.Font("ArcadeClassic.TTF", 50)
 screen = pygame.display.set_mode((width, height))
 pygame.draw.rect(screen, bgColor, pygame.Rect(0, 0, width, height))
 pygame.draw.line(screen, fgColor, (int(width / 2), 0), (int(width / 2), height), net_width)
@@ -132,13 +132,25 @@ class Paddle:
 
 def score_update(l_score, r_score):
     if l_score < 10:
-        font.render_to(screen, (12, int(height / 2 - 12)), str(l_score), fgColor, bgColor)
+        l_score_text = font.render(str(l_score), 1, fgColor)
+        pygame.draw.rect(screen, bgColor, pygame.Rect(int(width/2 - 100-l_score_text.get_width()/2), 10,
+                                                      l_score_text.get_width(), l_score_text.get_height()))
+        screen.blit(l_score_text, (int(width/2 - 100-l_score_text.get_width()/2), 10))
     else:
-        font.render_to(screen, (12, int(height / 2 - 12)), "w", fgColor, bgColor)
+        win_text = font.render('WIN', 1, fgColor)
+        pygame.draw.rect(screen, bgColor, pygame.Rect(int(width / 2 - 100 - win_text.get_width() / 2), 10,
+                                                      win_text.get_width(), win_text.get_height()))
+        screen.blit(win_text, (int(width/2 - 100-win_text.get_width()/2), 10))
     if r_score < 10:
-        font.render_to(screen, (width - 28, int(height / 2 - 12)), str(r_score), fgColor, bgColor)
+        r_score_text = font.render(str(r_score), 1, fgColor)
+        pygame.draw.rect(screen, bgColor, pygame.Rect(int(width / 2 + 100 - r_score_text.get_width() / 2), 10,
+                                                      r_score_text.get_width(), r_score_text.get_height()))
+        screen.blit(r_score_text, (int(width / 2 + 100 - r_score_text.get_width()/2), 10))
     else:
-        font.render_to(screen, (width - 28, int(height / 2 - 12)), "w", fgColor, bgColor)
+        win_text = font.render('WIN', 1, fgColor)
+        pygame.draw.rect(screen, bgColor, pygame.Rect(int(width / 2 + 100 - win_text.get_width() / 2), 10,
+                                                      win_text.get_width(), win_text.get_height()))
+        screen.blit(win_text, (int(width / 2 + 100 - win_text.get_width()/2), 10))
 
 
 def game(side_won):
