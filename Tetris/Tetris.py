@@ -1,5 +1,4 @@
 import pygame,random,sys
-import tetris_ai
 
 # 0:T, 1:S, 2:Z, 3:J, 4:L, 5:I, 6:O
 
@@ -114,12 +113,12 @@ class Tetris:
         self.window.blit(rotate,(int(self.g_width+(self.w_width-self.g_width)*3/4-rotate.get_width()/2),11*next_text.get_height()+2*self.block_size))
         down = self.tiny_font.render("Down",1,self.fgColor)
         self.window.blit(down,(int(self.g_width+(self.w_width-self.g_width)/4-down.get_width()/2),12*next_text.get_height()+2*self.block_size))
-        soft_drop = self.tiny_font.render("Soft Drop",1,self.fgColor)
+        soft_drop = self.tiny_font.render("Soft     Drop",1,self.fgColor)
         self.window.blit(soft_drop,(int(self.g_width+(self.w_width-self.g_width)*3/4-soft_drop.get_width()/2),12*next_text.get_height(
         )+2*self.block_size))
         space = self.tiny_font.render("Space",1,self.fgColor)
         self.window.blit(space,(int(self.g_width+(self.w_width-self.g_width)/4-space.get_width()/2),13*next_text.get_height()+2*self.block_size))
-        hard_drop = self.tiny_font.render("Hard Drop",1,self.fgColor)
+        hard_drop = self.tiny_font.render("Hard     Drop",1,self.fgColor)
         self.window.blit(hard_drop,(int(self.g_width+(self.w_width-self.g_width)*3/4-hard_drop.get_width()/2),13*next_text.get_height(
         )+2*self.block_size))
         p = self.tiny_font.render("P",1,self.fgColor)
@@ -128,19 +127,18 @@ class Tetris:
         self.window.blit(pause,(int(self.g_width+(self.w_width-self.g_width)*3/4-pause.get_width()/2),14*next_text.get_height()+2*self.block_size))
         escape = self.tiny_font.render("Escape",1,self.fgColor)
         self.window.blit(escape,(int(self.g_width+(self.w_width-self.g_width)/4-escape.get_width()/2),15*next_text.get_height()+2*self.block_size))
-        exit_game = self.tiny_font.render("Exit Game",1,self.fgColor)
+        exit_game = self.tiny_font.render("Exit     Game",1,self.fgColor)
         self.window.blit(exit_game,(int(self.g_width+(self.w_width-self.g_width)*3/4-exit_game.get_width()/2),15*next_text.get_height(
         )+2*self.block_size))
         a = self.tiny_font.render("A",1,self.fgColor)
         self.window.blit(a,(int(self.g_width+(self.w_width-self.g_width)/4-a.get_width()/2),16*next_text.get_height()+2*self.block_size))
-        toggle_ai = self.tiny_font.render("AI",1,self.fgColor)
+        toggle_ai = self.tiny_font.render("Toggle       AI",1,self.fgColor)
         self.window.blit(toggle_ai,(int(self.g_width+(self.w_width-self.g_width)*3/4-toggle_ai.get_width()/2),16*next_text.get_height(
         )+2*self.block_size))
-
         if self.ai:
-            ai = self.small_font.render("AI On",1,self.fgColor)
+            ai = self.small_font.render("AI     On",1,self.fgColor)
         else:
-            ai = self.small_font.render("AI Off",1,self.fgColor)
+            ai = self.small_font.render("AI     Off",1,self.fgColor)
         self.window.blit(ai,(int(self.g_width+(self.w_width-self.g_width)/2-ai.get_width()/2),int(self.w_height-ai.get_height())))
 
     def draw_number(self):
@@ -313,7 +311,7 @@ class Tetris:
                             if event.key == eval('pygame.K_'+key):
                                 key_actions[key]()
             if self.ai:
-                for event in list(pygame.event.get())+tetris_ai.run():
+                for event in list(pygame.event.get())+ai():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         quit()
@@ -325,6 +323,21 @@ class Tetris:
                                 key_actions[key]()
 
             clock.tick(FPS)
+
+class Event:
+    def __init__(self,type,key):
+        self.type = type
+        self.key = key
+
+counter = 0
+def ai():
+    global counter
+    counter += 1
+    if counter < 3:  # Temporary limit on how fast AI responds
+        return []
+    counter = 0
+    e = Event(pygame.KEYDOWN, pygame.K_UP)
+    return [e]
 
 if __name__ == "__main__":
     Tetris = Tetris()
