@@ -2,6 +2,7 @@ import pygame
 import pygame.freetype
 import random
 import time
+import math
 
 # Variables
 width = 1200
@@ -9,10 +10,10 @@ height = 600
 field_width = 1100
 net_width = 3
 ball_radius = 10
-ball_velocity = 5
+ball_velocity = 10
 paddle_width = 10
 paddle_height = 100
-paddle_velocity = 5
+paddle_velocity = 6
 
 fgColor = pygame.Color(255, 255, 255)  # White
 bgColor = pygame.Color(53, 53, 53)  # Dark Grey
@@ -30,16 +31,16 @@ class Ball:
         self.x = width / 2
         self.y = height / 2
         self.vx = random.choice([-1, 1]) * ball_velocity
-        self.vy = random.choice([-1, 1]) * ball_velocity
+        self.vy = math.sqrt(ball_velocity**2-self.vx**2)
 
     def reset(self, side_won):
         self.x = int(width / 2)
         self.y = int(height / 2)
-        self.vy = random.choice([-1, 1]) * ball_velocity
         if side_won == "left":
-            self.vx = ball_velocity
+            self.vx = random.choice([0.5, 1]) * ball_velocity
         if side_won == "right":
-            self.vx = -ball_velocity
+            self.vx = random.choice([0.5, 1]) * -ball_velocity
+        self.vy = math.sqrt(ball_velocity**2-self.vx**2)
 
     def draw(self, color):
         global screen, paddle_width
@@ -56,13 +57,22 @@ class Ball:
                 <= (width - field_width) / 2 \
                 and self.vx < 0 \
                 and l_paddle.y - l_paddle.height / 2 <= self.y <= l_paddle.y + l_paddle.height / 2:
-            self.vx = -self.vx
+            self.vx = ball_velocity - \
+                      math.fabs((self.y - l_paddle.y) / (paddle_height/2) * (ball_velocity / (math.sqrt(2))))
+            self.vy = (self.y - r_paddle.y)/math.fabs((self.y - r_paddle.y)) * math.sqrt(ball_velocity**2-self.vx**2) \
+                if self.y != l_paddle.y else 0
+            print('left', self.vx, self.vy)
+
         # Collision with the right paddle
         if width - (width - field_width) / 2 + paddle_width >= self.x + self.vx + ball_radius \
                 >= width - (width - field_width) / 2 \
                 and self.vx > 0 \
                 and r_paddle.y - r_paddle.height / 2 <= self.y <= r_paddle.y + r_paddle.height / 2:
-            self.vx = -self.vx
+            self.vx = -(ball_velocity -
+                        math.fabs((self.y - r_paddle.y) / (paddle_height/2) * (ball_velocity / (math.sqrt(2)))))
+            self.vy = (self.y - r_paddle.y)/math.fabs((self.y - r_paddle.y)) * math.sqrt(ball_velocity**2-self.vx**2) \
+                if self.y != r_paddle.y else 0
+            print('right', self.vx, self.vy)
 
         self.draw(bgColor)
         self.x = self.x + self.vx
@@ -133,24 +143,24 @@ class Paddle:
 def score_update(l_score, r_score):
     if l_score < 10:
         l_score_text = font.render(str(l_score), 1, fgColor)
-        pygame.draw.rect(screen, bgColor, pygame.Rect(int(width/2 - 100-l_score_text.get_width()/2), 10,
+        pygame.draw.rect(screen, bgColor, pygame.Rect(int(width / 2 - 100 - l_score_text.get_width() / 2), 10,
                                                       l_score_text.get_width(), l_score_text.get_height()))
-        screen.blit(l_score_text, (int(width/2 - 100-l_score_text.get_width()/2), 10))
+        screen.blit(l_score_text, (int(width / 2 - 100 - l_score_text.get_width() / 2), 10))
     else:
         win_text = font.render('WIN', 1, fgColor)
         pygame.draw.rect(screen, bgColor, pygame.Rect(int(width / 2 - 100 - win_text.get_width() / 2), 10,
                                                       win_text.get_width(), win_text.get_height()))
-        screen.blit(win_text, (int(width/2 - 100-win_text.get_width()/2), 10))
+        screen.blit(win_text, (int(width / 2 - 100 - win_text.get_width() / 2), 10))
     if r_score < 10:
         r_score_text = font.render(str(r_score), 1, fgColor)
         pygame.draw.rect(screen, bgColor, pygame.Rect(int(width / 2 + 100 - r_score_text.get_width() / 2), 10,
                                                       r_score_text.get_width(), r_score_text.get_height()))
-        screen.blit(r_score_text, (int(width / 2 + 100 - r_score_text.get_width()/2), 10))
+        screen.blit(r_score_text, (int(width / 2 + 100 - r_score_text.get_width() / 2), 10))
     else:
         win_text = font.render('WIN', 1, fgColor)
         pygame.draw.rect(screen, bgColor, pygame.Rect(int(width / 2 + 100 - win_text.get_width() / 2), 10,
                                                       win_text.get_width(), win_text.get_height()))
-        screen.blit(win_text, (int(width / 2 + 100 - win_text.get_width()/2), 10))
+        screen.blit(win_text, (int(width / 2 + 100 - win_text.get_width() / 2), 10))
 
 
 def game(side_won):
@@ -196,5 +206,3 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             quit()
-
-

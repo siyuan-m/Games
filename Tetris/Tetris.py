@@ -306,7 +306,6 @@ class Tetris:
             pygame.time.set_timer(pygame.USEREVENT + 1, 1000)
 
     def run(self):
-        global best_score
         key_actions = {
             'ESCAPE': sys.exit,
             'LEFT': lambda: self.move(-1),
@@ -343,7 +342,7 @@ class Tetris:
             for event in list(pygame.event.get()):
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    quit()
+                    sys.exit()
                 elif event.type == pygame.USEREVENT + 1:
                     self.drop(soft_drop=False)
                 elif event.type == pygame.KEYDOWN:
